@@ -37,4 +37,17 @@ where
     and grantee != 'PUBLIC'
 -- SKIP_INTERNAL    and routine_schema not in ('pg_internal', 'pg_catalog', 'information_schema', 'pg_toast')
 -- SKIP_INTERNAL    and routine_schema not like 'pg_temp_%' and routine_schema not like 'pg_toast_temp_%'
+union
+SELECT '' as schema,
+       n.nspname AS name,
+       'schema' as object_type,
+       r.rolname AS user,
+       p.perm AS privilege
+FROM pg_catalog.pg_namespace AS n
+    CROSS JOIN pg_catalog.pg_roles AS r
+    CROSS JOIN (VALUES ('USAGE'), ('CREATE')) AS p(perm)
+WHERE has_schema_privilege(r.oid, n.oid, p.perm)
+      AND NOT r.rolsuper
+-- SKIP_INTERNAL    and n.nspname not in ('pg_internal', 'pg_catalog', 'information_schema', 'pg_toast')
+-- SKIP_INTERNAL    and n.nspname not like 'pg_temp_%' and n.nspname not like 'pg_toast_temp_%'
 order by schema, name, "user";
